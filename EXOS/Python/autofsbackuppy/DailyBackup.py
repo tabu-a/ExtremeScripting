@@ -6,7 +6,6 @@
 # Revision      	: 1.0
 # EXOS Version(s)  	: 15.5.2 (EXOS supports Python)
 # Last Updated  	: 15-Jan-2014
-# https://github.com/extremenetworks/ExtremeScripting/blob/master/EXOS/Python/autofsbackuppy/DailyBackup.py
 #
 # Purpose:
 # Run automated back up on all scripts, including configuration, policies, and scripts. Benefits
