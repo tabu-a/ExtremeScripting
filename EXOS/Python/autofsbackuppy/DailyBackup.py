@@ -6,6 +6,7 @@
 # Revision      	: 1.0
 # EXOS Version(s)  	: 15.5.2 (EXOS supports Python)
 # Last Updated  	: 15-Jan-2014
+# https://github.com/extremenetworks/ExtremeScripting/blob/master/EXOS/Python/autofsbackuppy/DailyBackup.py
 #
 # Purpose:
 # Run automated back up on all scripts, including configuration, policies, and scripts. Benefits
@@ -31,21 +32,21 @@ backupTime = '22:00'
 
 
 ###############################################################################
-serial = None
-yeardirectory = None
-modirectory = None
-daydirectory = None
-systemTime = None
+yeardirectory = time.strftime('%Y')
+modirectory = time.strftime('%m')
+daydirectory = time.strftime('%d')
+systemTime = time.strftime('%H%M%S')
+SysName = None
 
 def exosCmd(cmd):
+    #print 'printing cmd'
     #print cmd
     result = exsh.clicmd(cmd, True)
+    #print 'printing result'
     #print result
     return result
 
-
 def uploadFiles(fileSuffix, uploadPrefix):
-    serialSystem = serial + '_' +  systemTime + '_'
     for line in exosCmd('ls *' + fileSuffix).splitlines():
         line.strip()
         if line.endswith(fileSuffix):
@@ -54,11 +55,12 @@ def uploadFiles(fileSuffix, uploadPrefix):
                 exosCmd('create log entry "Length Error.File name for ' + fileName + ' exceeded 32 byte max length."')
                 exosCmd('create log entry "' + fileName + ' truncated to ' +  fileName[:32] + '"')
                 fileName = fileName[:32]
-            destFileName = '{yyyy}-{mm}-{dd}_{prefix}{file}{sourceFile}'.format(yyyy=yeardirectory,
+            destFileName = '{yyyy}-{mm}-{dd}_{hostname}_{prefix}_{systime}_{sourceFile}'.format(yyyy=yeardirectory,
                     mm=modirectory,
                     dd=daydirectory,
+                    hostname=SysName,
                     prefix=uploadPrefix,
-                    file=serialSystem,
+                    systime=systemTime,
                     sourceFile=fileName)
             cmd = 'tftp put {ipaddress} vr {virtualRouter} {sourceFile} {dest}'.format(ipaddress=tftp,
                     virtualRouter=vrtr,
@@ -115,14 +117,10 @@ def upmConfig():
 
 
 if upmConfig() == None:
-    yeardirectory = time.strftime('%Y')
-    modirectory = time.strftime('%m')
-    daydirectory = time.strftime('%d')
-    systemTime = time.strftime('%H%M%S')
-    for line in exosCmd('show version').splitlines():
-        if line.startswith('Switch'):
+    for line in exosCmd('show system').splitlines():
+        if line.startswith('SysName'):
             tokens = line.split()
-            serial = tokens[3]
+            SysName = tokens[1]
             break
 # upload policy files
     uploadFiles('.pol','p')
